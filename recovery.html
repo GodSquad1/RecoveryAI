@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1" />
+ <title>RecoveryAI</title>
+ <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+ <h1>RecoveryAI</h1>
+
+
+ <textarea id="patientText" placeholder="Enter patient response here..."></textarea>
+  <div>
+   <button id="submitBtn">Submit Response</button>
+   <button id="clearBtn">Clear Data</button>
+ </div>
+
+
+ <section id="metrics-section" class="metrics" style="display:none;">
+   <div class="metric-box">
+     <div>Vocabulary Richness</div>
+     <div id="vocabRichness" class="metric-value">--</div>
+   </div>
+   <div class="metric-box">
+     <div>Avg. Sentence Length</div>
+     <div id="avgSentenceLength" class="metric-value">--</div>
+   </div>
+   <div class="metric-box">
+     <div>Grammar Status</div>
+     <div id="grammarFlag" class="metric-value">--</div>
+   </div>
+ </section>
+
+
+ <section id="charts-section" style="display:none;">
+   <canvas id="vocabChart" height="150"></canvas>
+   <canvas id="sentenceChart" height="150"></canvas>
+ </section>
+
+
+ <section id="flags-section" class="flag" style="display:none;"></section>
+
+
+ <div id="alerts" class="flag"></div>
+
+
+ <div class="pupil-status">
+   <label for="pupilSelect">Pupil Status:</label>
+   <select id="pupilSelect">
+     <option value="normal">Normal</option>
+     <option value="dilated">Dilated</option>
+   </select>
+   <div id="pupilAlert" style="display:none; color:#d32f2f; margin-top: 0.5rem;">
+     Alert: Dilated pupils detected.
+   </div>
+ </div>
+
+
+ <section id="assessment-section" style="display:none; margin-top:2rem;">
+   <h2>Checkup Assessments</h2>
+   <div id="assessmentLog"></div>
+   <div id="gptSummary" class="summary-box"></div>
+   <pre id="gptSummary" style="margin-top:1rem; color:#333; background:#f1f1f1; padding:1rem; border-radius:6px;"></pre>
+ </section>
+
+
+ <footer class="footer">
+   Aphasia Recovery Tracker &copy; 2025
+ </footer>
+
+
+ <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+ <script src="app.js"></script>
+</body>
+</html>
+
+
