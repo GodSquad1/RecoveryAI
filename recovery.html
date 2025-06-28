@@ -1,512 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AphasiaTrack - Language Recovery Monitoring</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aphasia Recovery Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
-  <style id="app-style">
-    body {
-      font-family: 'Inter', 'Segoe UI', sans-serif;
-      background-color: #121212;
-      color: #e0e0e0;
-    }
-
-    .neon-accent {
-      color: #2bffb1;
-      text-shadow: 0 0 5px rgba(43, 255, 177, 0.7);
-    }
-
-    .neon-accent-red {
-      color: #ff4d4d;
-      text-shadow: 0 0 5px rgba(255, 77, 77, 0.7);
-    }
-
-    .neon-accent-blue {
-      color: #4dacff;
-      text-shadow: 0 0 5px rgba(77, 172, 255, 0.7);
-    }
-
-    .neon-accent-purple {
-      color: #b94dff;
-      text-shadow: 0 0 5px rgba(185, 77, 255, 0.7);
-    }
-
-    .btn {
-      transition: all 0.3s ease;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(43, 255, 177, 0.4);
-    }
-
-    .btn-record {
-      background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
-      border: 1px solid #2bffb1;
-    }
-
-    .btn-record.recording {
-      background: linear-gradient(45deg, #2bffb1, #1a9e70);
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0% {
-        box-shadow: 0 0 0 0 rgba(43, 255, 177, 0.7);
-      }
-      70% {
-        box-shadow: 0 0 0 10px rgba(43, 255, 177, 0);
-      }
-      100% {
-        box-shadow: 0 0 0 0 rgba(43, 255, 177, 0);
-      }
-    }
-
-    .card {
-      background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
-      border-radius: 10px;
-      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-      border: 1px solid #333;
-    }
-
-    .alert {
-      border-left: 4px solid;
-      background-color: rgba(255, 77, 77, 0.15);
-    }
-
-    .metric-value {
-      font-size: 1.75rem;
-      font-weight: 700;
-    }
-
-    .metric-label {
-      font-size: 0.85rem;
-      opacity: 0.7;
-    }
-
-    .tab-active {
-      border-bottom: 2px solid #2bffb1;
-      color: #2bffb1;
-    }
-
-    /* Custom scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: #1a1a1a;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #444;
-      border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: #2bffb1;
-    }
-
-    .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 5px solid rgba(43, 255, 177, 0.3);
-      border-top-color: #2bffb1;
-      border-radius: 50%;
-      animation: spinner 1s linear infinite;
-    }
-
-    @keyframes spinner {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .waveform {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      height: 50px;
-    }
-
-    .waveform-bar {
-      width: 3px;
-      background-color: #2bffb1;
-      border-radius: 3px;
-      animation: waveform-animation 0.5s infinite alternate;
-    }
-
-    @keyframes waveform-animation {
-      0% {
-        height: 10%;
-      }
-      100% {
-        height: 100%;
-      }
-    }
-
-    .waveform-bar:nth-child(1) { animation-delay: 0.0s; }
-    .waveform-bar:nth-child(2) { animation-delay: 0.1s; }
-    .waveform-bar:nth-child(3) { animation-delay: 0.2s; }
-    .waveform-bar:nth-child(4) { animation-delay: 0.1s; }
-    .waveform-bar:nth-child(5) { animation-delay: 0.3s; }
-    .waveform-bar:nth-child(6) { animation-delay: 0.2s; }
-    .waveform-bar:nth-child(7) { animation-delay: 0.1s; }
-  </style>
 </head>
-<body class="min-h-screen">
-  <nav class="w-full bg-[#1a1a1a] border-b border-gray-800 shadow-lg">
-    <div class="container mx-auto px-4 py-4">
-      <div class="flex justify-between items-center">
-        <div class="flex items-center">
-          <svg class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM8 17.5C7.17 17.5 6.5 16.83 6.5 16C6.5 15.17 7.17 14.5 8 14.5C8.83 14.5 9.5 15.17 9.5 16C9.5 16.83 8.83 17.5 8 17.5ZM9.5 12C9.5 12.83 8.83 13.5 8 13.5C7.17 13.5 6.5 12.83 6.5 12C6.5 11.17 7.17 10.5 8 10.5C8.83 10.5 9.5 11.17 9.5 12ZM12 17.5C11.17 17.5 10.5 16.83 10.5 16C10.5 15.17 11.17 14.5 12 14.5C12.83 14.5 13.5 15.17 13.5 16C13.5 16.83 12.83 17.5 12 17.5ZM14.5 12C14.5 12.83 13.83 13.5 13 13.5C12.17 13.5 11.5 12.83 11.5 12C11.5 11.17 12.17 10.5 13 10.5C13.83 10.5 14.5 11.17 14.5 12ZM16 17.5C15.17 17.5 14.5 16.83 14.5 16C14.5 15.17 15.17 14.5 16 14.5C16.83 14.5 17.5 15.17 17.5 16C17.5 16.83 16.83 17.5 16 17.5Z" fill="#2bffb1"/>
-          </svg>
-          <h1 class="text-xl font-bold neon-accent">AphasiaTrack</h1>
-        </div>
-        <div class="hidden md:flex space-x-6">
-          <a href="javascript:void(0)" class="tab-active py-2 px-1">Dashboard</a>
-          <a href="javascript:void(0)" class="text-gray-300 hover:text-white py-2 px-1">Patients</a>
-          <a href="javascript:void(0)" class="text-gray-300 hover:text-white py-2 px-1">Settings</a>
-          <a href="javascript:void(0)" class="text-gray-300 hover:text-white py-2 px-1">Help</a>
-        </div>
-        <div class="flex items-center">
-          <button id="view-toggle" class="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700">
-            <span class="patient-view-text">Switch to Clinician View</span>
-            <span class="clinician-view-text hidden">Switch to Patient View</span>
-          </button>
-        </div>
+<body class="bg-gray-900 text-white min-h-screen p-6">
+  <div class="max-w-3xl mx-auto space-y-6">
+    <h1 class="text-3xl font-bold text-center text-teal-400">Aphasia Recovery Tracker</h1>
+
+    <textarea id="patientText" rows="4" class="w-full p-3 rounded bg-gray-800" placeholder="Enter your daily speech response here..."></textarea>
+
+    <div class="flex space-x-4">
+      <select id="pupilSelect" class="bg-gray-800 text-white p-2 rounded">
+        <option value="normal">Pupil: Normal</option>
+        <option value="dilated">Pupil: Dilated</option>
+      </select>
+      <button id="submitBtn" class="bg-teal-500 hover:bg-teal-600 text-black px-4 py-2 rounded">Submit Response</button>
+      <button id="clearBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Clear All</button>
+    </div>
+
+    <div id="pupilAlert" class="text-red-400 hidden">⚠️ Dilated pupil detected</div>
+
+    <div id="alerts" class="text-yellow-300 font-semibold mt-2"></div>
+
+    <div id="metrics-section" class="grid grid-cols-3 gap-4 hidden">
+      <div>
+        <h3 class="text-sm text-gray-400">Vocab Richness</h3>
+        <div id="vocabRichness" class="text-lg font-bold text-teal-300">--</div>
+      </div>
+      <div>
+        <h3 class="text-sm text-gray-400">Avg Sentence Length</h3>
+        <div id="avgSentenceLength" class="text-lg font-bold text-green-300">--</div>
+      </div>
+      <div>
+        <h3 class="text-sm text-gray-400">Grammar Check</h3>
+        <div id="grammarFlag" class="text-lg font-bold">--</div>
       </div>
     </div>
-  </nav>
 
-  <!-- Patient View -->
-  <div id="patient-view" class="container mx-auto px-4 py-8">
-    <div class="max-w-2xl mx-auto">
-      <div class="card p-6 mb-8">
-        <h2 class="text-2xl font-bold mb-2">Daily Voice Check-in</h2>
-        <p class="text-gray-400 mb-6">Please respond to today's prompt:</p>
-        
-        <div class="bg-[#1a1a1a] rounded-lg p-4 mb-6 border border-gray-800">
-          <p class="text-xl font-medium neon-accent-blue">"What did you do today?"</p>
-        </div>
-        
-        <!-- User input fields for session data -->
-        <div class="mb-4">
-          <label class="block mb-1">Transcript:</label>
-          <textarea id="user-transcript" class="w-full p-2 rounded bg-gray-800 text-white" rows="3"></textarea>
-        </div>
-        
-        <!-- Remove other input fields (vocabulary, sentence length, grammar, pupil) -->
-        
-        <!-- Update submit button -->
-        <div class="flex justify-center mb-8">
-          <button id="submitBtn" class="btn btn-record flex items-center justify-center rounded-lg px-6 py-3 text-white">
-            <span>Submit Response</span>
-            <span id="submit-spinner" class="hidden ml-2">
-              <i class="fas fa-spinner fa-spin"></i>
-            </span>
-          </button>
-        </div>
-        
-        <!-- Add area to display calculated metrics after submission -->
-        <div id="calculated-metrics" class="hidden mb-6">
-          <h3 class="text-lg font-bold mb-3">Analysis Results:</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800">
-              <p class="text-sm text-gray-400">Vocabulary Score</p>
-              <p id="result-vocab" class="text-xl neon-accent"></p>
-            </div>
-            <div class="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800">
-              <p class="text-sm text-gray-400">Avg. Sentence Length</p>
-              <p id="result-sentlen" class="text-xl neon-accent"></p>
-            </div>
-            <div class="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800">
-              <p class="text-sm text-gray-400">Grammar Score</p>
-              <p id="result-grammar" class="text-xl neon-accent"></p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="card p-6">
-        <h2 class="text-2xl font-bold mb-4">Previous Sessions</h2>
-        <div id="session-history" class="space-y-4">
-          <!-- Session history will be populated dynamically -->
-        </div>
-      </div>
+    <div id="charts-section" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+      <canvas id="vocabChart" height="150"></canvas>
+      <canvas id="sentenceChart" height="150"></canvas>
+    </div>
+
+    <div id="flags-section" class="mt-6 hidden">
+      <h2 class="text-xl font-bold mb-2">Session Log</h2>
+      <pre id="assessmentLog" class="bg-gray-800 p-3 rounded overflow-auto max-h-64"></pre>
+    </div>
+
+    <div id="assessment-section" class="mt-6 hidden">
+      <h2 class="text-xl font-bold text-teal-400 mb-2">Progress Summary (every 5 sessions)</h2>
+      <pre id="gptSummary" class="bg-gray-800 p-3 rounded overflow-auto whitespace-pre-wrap"></pre>
     </div>
   </div>
 
-  <!-- Clinician View -->
-  <div id="clinician-view" class="container mx-auto px-4 py-8 hidden">
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      <div class="lg:col-span-1">
-        <div class="card p-4 mb-6">
-          <h2 class="font-bold text-lg mb-4">Patient List</h2>
-          <div class="space-y-2">
-            <div class="p-3 bg-[#2bffb1]/10 border-l-4 border-[#2bffb1] rounded flex justify-between items-center">
-              <span>John D.</span>
-              <span class="text-xs py-1 px-2 bg-[#2bffb1]/20 text-[#2bffb1] rounded-full">Selected</span>
-            </div>
-            <div class="p-3 hover:bg-[#1a1a1a] rounded cursor-pointer">Mary S.</div>
-            <div class="p-3 hover:bg-[#1a1a1a] rounded cursor-pointer flex justify-between items-center">
-              <span>Robert T.</span>
-              <span class="text-xs py-1 px-2 bg-red-500/20 text-red-400 rounded-full">Alert</span>
-            </div>
-            <div class="p-3 hover:bg-[#1a1a1a] rounded cursor-pointer">Eliza J.</div>
-            <div class="p-3 hover:bg-[#1a1a1a] rounded cursor-pointer">Michael P.</div>
-          </div>
-        </div>
-        
-        <div class="card p-4">
-          <h2 class="font-bold text-lg mb-4">Alert Settings</h2>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm mb-1 text-gray-400">Vocabulary Threshold (%)</label>
-              <input type="range" min="0" max="100" value="15" class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700">
-              <div class="flex justify-between text-xs text-gray-500 mt-1">
-                <span>5%</span>
-                <span>15%</span>
-                <span>25%</span>
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm mb-1 text-gray-400">Sentence Length Threshold (%)</label>
-              <input type="range" min="0" max="100" value="20" class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700">
-              <div class="flex justify-between text-xs text-gray-500 mt-1">
-                <span>10%</span>
-                <span>20%</span>
-                <span>30%</span>
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm mb-1 text-gray-400">Grammar Threshold (%)</label>
-              <input type="range" min="0" max="100" value="10" class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700">
-              <div class="flex justify-between text-xs text-gray-500 mt-1">
-                <span>5%</span>
-                <span>10%</span>
-                <span>15%</span>
-              </div>
-            </div>
-            <div>
-              <label class="flex items-center text-sm mb-1 text-gray-400">
-                <input type="checkbox" checked class="mr-2"> Alert on pupil dilation
-              </label>
-            </div>
-            <button class="w-full py-2 px-4 bg-gray-800 hover:bg-gray-700 text-white rounded">
-              Save Settings
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <div class="lg:col-span-3 space-y-6">
-        <div class="card p-6">
-          <div class="flex justify-between items-center mb-6">
-            <div>
-              <h2 class="text-2xl font-bold">John D.</h2>
-              <p class="text-gray-400">Patient ID: PT-2025-0142 • Age: 65 • 3 months post-stroke</p>
-            </div>
-            <button class="btn px-4 py-2 rounded-lg bg-[#2bffb1] text-black font-medium hover:bg-[#20d692]">
-              <i class="fas fa-download mr-2"></i>Export Report
-            </button>
-          </div>
-          
-          <div class="alert p-4 mb-6">
-            <div class="flex items-start">
-              <i class="fas fa-exclamation-triangle text-red-400 mt-1 mr-3"></i>
-              <div>
-                <h3 class="font-bold text-red-400">Recovery Alert</h3>
-                <p class="text-gray-300">Grammar score has plateaued for 7 days. Consider therapy adjustment.</p>
-              </div>
-            </div>
-          </div>
-          
-          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
-            <div>
-              <h3 class="font-medium mb-3 text-gray-300">Vocabulary Richness</h3>
-              <div class="bg-[#1a1a1a] rounded-lg p-4 h-64 border border-gray-800">
-                <canvas id="vocabularyChart"></canvas>
-              </div>
-            </div>
-            <div>
-              <h3 class="font-medium mb-3 text-gray-300">Average Sentence Length</h3>
-              <div class="bg-[#1a1a1a] rounded-lg p-4 h-64 border border-gray-800">
-                <canvas id="sentenceChart"></canvas>
-              </div>
-            </div>
-            <div>
-              <h3 class="font-medium mb-3 text-gray-300">Grammar Score</h3>
-              <div class="bg-[#1a1a1a] rounded-lg p-4 h-64 border border-gray-800">
-                <canvas id="grammarChart"></canvas>
-              </div>
-            </div>
-            <div>
-              <h3 class="font-medium mb-3 text-gray-300">Pupil Dilation</h3>
-              <div class="bg-[#1a1a1a] rounded-lg p-4 h-64 border border-gray-800">
-                <canvas id="pupilChart"></canvas>
-              </div>
-            </div>
-          </div>
-          
-          <div>
-            <h3 class="font-medium mb-3 text-gray-300">Recent Sessions</h3>
-            <div class="bg-[#1a1a1a] rounded-lg overflow-hidden border border-gray-800">
-              <table class="w-full">
-                <thead>
-                  <tr class="bg-[#252525] text-left">
-                    <th class="p-3">Date</th>
-                    <th class="p-3">Vocabulary</th>
-                    <th class="p-3">Sentence Length</th>
-                    <th class="p-3">Grammar</th>
-                    <th class="p-3">Pupil Alert</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <!-- Session rows will be populated dynamically -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Utility functions for metrics (copied from app.js)
-    function calcVocabRichness(text, maxEstimatedG = 0.14) {
-      const words = text.toLowerCase().match(/\b\w+\b/g) || [];
-      const unique = new Set(words);
-      const G_raw = words.length ? unique.size / words.length : 0;
-      const base = 10;
-      // Apply log-scaling
-      const numerator = Math.log(G_raw + 1) ** 2;
-      const denominator = Math.log(maxEstimatedG + 1);
-      return denominator !== 0 ? numerator / denominator : 0;
-    }
-
-    function calcAvgSentenceLength(text) {
-      const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
-      const wordCount = sentences.reduce((sum, s) => sum + (s.match(/\b\w+\b/g) || []).length, 0);
-      return sentences.length ? wordCount / sentences.length : 0;
-    }
-
-    function grammarCheck(text) {
-      let issues = 0;
-      const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
-      if (!sentences.length) return 'No sentences detected';
-      // 1. Sentence should start with uppercase
-      sentences.forEach(s => {
-        if (s.length > 0 && s[0] !== s[0].toUpperCase()) issues++;
-      });
-      // 2. Sentence should end with punctuation
-      const endsWithPunct = /[.!?]$/;
-      if (!endsWithPunct.test(text.trim())) issues++;
-      // 3. No repeated words
-      sentences.forEach(s => {
-        const words = s.toLowerCase().split(/\s+/);
-        for (let i = 1; i < words.length; i++) {
-          if (words[i] === words[i - 1] && words[i].length > 2) {
-            issues++;
-            break;
-          }
-        }
-      });
-      // 4. No very short sentences
-      sentences.forEach(s => {
-        if ((s.match(/\b\w+\b/g) || []).length < 3) issues++;
-      });
-      // 5. No double spaces
-      if (/  +/.test(text)) issues++;
-      // 6. At least one verb (very basic check for 'is', 'are', 'was', 'were', 'has', 'have', 'do', 'did', 'go', 'went', 'see', 'saw', 'make', 'made', 'get', 'got', 'say', 'said', 'can', 'will', 'shall', 'should', 'could', 'would', 'may', 'might', 'must')
-      const verbList = ['is','are','was','were','has','have','do','did','go','went','see','saw','make','made','get','got','say','said','can','will','shall','should','could','would','may','might','must'];
-      const hasVerb = verbList.some(v => new RegExp(`\\b${v}\\b`).test(text.toLowerCase()));
-      if (!hasVerb) issues++;
-      // Return result
-      if (issues === 0) return 'OK';
-      if (issues <= 2) return 'Minor issues';
-      return 'Severe issues';
-    }
-
-    const STORAGE_KEY = 'aphasia_recovery_data';
-
-    document.addEventListener('DOMContentLoaded', function() {
-      fetchSessions();
-      document.getElementById('submitBtn').addEventListener('click', function() {
-        const transcript = document.getElementById('user-transcript').value.trim();
-        if (!transcript) {
-          alert('Please enter a transcript before submitting.');
-          return;
-        }
-        // UI state
-        const submitBtn = document.getElementById('submitBtn');
-        const submitSpinner = document.getElementById('submit-spinner');
-        submitBtn.disabled = true;
-        submitSpinner.classList.remove('hidden');
-        try {
-          // Calculate metrics
-          const vocabulary = calcVocabRichness(transcript) * 100;
-          const sentenceLength = calcAvgSentenceLength(transcript);
-          const grammar = grammarCheck(transcript);
-          // Save session
-          let sessions = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-          const session = {
-            date: new Date().toISOString(),
-            transcript,
-            vocabulary,
-            sentenceLength,
-            grammar
-          };
-          sessions.push(session);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-          // Display metrics
-          document.getElementById('result-vocab').textContent = vocabulary.toFixed(1);
-          document.getElementById('result-sentlen').textContent = sentenceLength.toFixed(1);
-          document.getElementById('result-grammar').textContent = grammar;
-          document.getElementById('calculated-metrics').classList.remove('hidden');
-          // Refresh session history
-          fetchSessions();
-          // Clear transcript
-          document.getElementById('user-transcript').value = '';
-        } catch (error) {
-          console.error('Error:', error);
-          alert('An error occurred: ' + error.message);
-        } finally {
-          submitBtn.disabled = false;
-          submitSpinner.classList.add('hidden');
-        }
-      });
-    });
-
-    function fetchSessions() {
-      try {
-        const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-        const sessionHistory = document.getElementById('session-history');
-        sessionHistory.innerHTML = '';
-        if (sessions.length === 0) {
-          sessionHistory.innerHTML = '<p class="text-gray-400">No previous sessions found.</p>';
-          return;
-        }
-        sessions.slice().reverse().forEach(session => {
-          const sessionDate = new Date(session.date).toLocaleDateString();
-          const sessionEl = document.createElement('div');
-          sessionEl.className = 'bg-[#1a1a1a] p-4 rounded-lg border border-gray-800';
-          sessionEl.innerHTML = `
-            <div class=\"flex justify-between items-center mb-2\">\n              <h3 class=\"font-bold\">${sessionDate}</h3>\n            </div>\n            <div class=\"grid grid-cols-3 gap-2 text-sm\">\n              <div>\n                <span class=\"text-gray-400\">Vocabulary:</span>\n                <span class=\"ml-1 neon-accent\">${typeof session.vocabulary === 'number' ? session.vocabulary.toFixed(1) : 'N/A'}</span>\n              </div>\n              <div>\n                <span class=\"text-gray-400\">Sentence Length:</span>\n                <span class=\"ml-1 neon-accent\">${typeof session.sentenceLength === 'number' ? session.sentenceLength.toFixed(1) : 'N/A'}</span>\n              </div>\n              <div>\n                <span class=\"text-gray-400\">Grammar:</span>\n                <span class=\"ml-1 neon-accent\">${session.grammar || 'N/A'}</span>\n              </div>\n            </div>\n            <p class=\"text-gray-300 mt-2 text-sm line-clamp-2\">${session.transcript}</p>\n          `;
-          sessionHistory.appendChild(sessionEl);
-        });
-      } catch (error) {
-        console.error('Error fetching sessions:', error);
-        document.getElementById('session-history').innerHTML = 
-          `<p class="text-red-400">Failed to load session history: ${error.message}</p>`;
-      }
-    }
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
