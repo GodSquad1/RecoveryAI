@@ -2,62 +2,617 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RecoveryAI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aphasia Recovery Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .tab-active {
+      border-bottom: 2px solid #3b82f6;
+      font-weight: 600;
+    }
+  </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen p-6">
-  <div class="max-w-3xl mx-auto space-y-6">
-    <h1 class="text-3xl font-bold text-center text-teal-400">RecoveryAI</h1>
+<body class="bg-gray-100 min-h-screen">
 
-    <textarea id="patientText" rows="4" class="w-full p-3 rounded bg-gray-800" placeholder="What did you do?"></textarea>
-
-    <div class="flex space-x-4">
-      <select id="pupilSelect" class="bg-gray-800 text-white p-2 rounded">
-        <option value="normal">Pupil: Normal</option>
-        <option value="dilated">Pupil: Dilated</option>
+  <!-- Login Screen -->
+  <div id="auth-screen" class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded shadow-md w-96">
+      <h2 class="text-2xl font-bold mb-4 text-center">Login / Signup</h2>
+      <input type="text" id="auth-username" placeholder="Username" class="w-full mb-3 px-4 py-2 border rounded" />
+      <input type="password" id="auth-password" placeholder="Password" class="w-full mb-3 px-4 py-2 border rounded" />
+      <select id="auth-role" class="w-full mb-3 px-4 py-2 border rounded">
+        <option value="Patient">Patient</option>
+        <option value="Nurse">Nurse</option>
+        <option value="Doctor">Doctor</option>
       </select>
-      <button id="submitBtn" class="bg-teal-500 hover:bg-teal-600 text-black px-4 py-2 rounded">Submit Response</button>
-      <button id="clearBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Clear All</button>
-    </div>
-
-    <div id="pupilAlert" class="text-red-400 hidden">⚠️ Dilated pupil detected</div>
-
-    <div id="alerts" class="text-yellow-300 font-semibold mt-2"></div>
-
-    <div id="metrics-section" class="grid grid-cols-3 gap-4 hidden">
-      <div>
-        <h3 class="text-sm text-gray-400">Vocab Richness</h3>
-        <div id="vocabRichness" class="text-lg font-bold text-teal-300">--</div>
-      </div>
-      <div>
-        <h3 class="text-sm text-gray-400">Avg Sentence Length</h3>
-        <div id="avgSentenceLength" class="text-lg font-bold text-green-300">--</div>
-      </div>
-      <div>
-        <h3 class="text-sm text-gray-400">Grammar Check</h3>
-        <div id="grammarFlag" class="text-lg font-bold">--</div>
-      </div>
-    </div>
-
-    <div id="charts-section" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
-      <canvas id="vocabChart" height="200"></canvas>
-      <canvas id="sentenceChart" height="200"></canvas>
-      <canvas id="grammarChart" height="200"></canvas>
-    </div>
-
-    <div id="flags-section" class="mt-6 hidden">
-      <h2 class="text-xl font-bold mb-2">Session Log</h2>
-      <pre id="assessmentLog" class="bg-gray-800 p-3 rounded overflow-auto max-h-64"></pre>
-    </div>
-
-    <div id="assessment-section" class="mt-6 hidden">
-      <h2 class="text-xl font-bold text-teal-400 mb-2">Progress Summary (every 5 sessions)</h2>
-      <pre id="gptSummary" class="bg-gray-800 p-3 rounded overflow-auto whitespace-pre-wrap"></pre>
+      <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded">Enter</button>
     </div>
   </div>
 
-  <script src="app2.js"></script>
+  <!-- Main App -->
+  <div id="main-app" class="hidden">
+    <nav class="bg-white shadow p-4 flex justify-between">
+      <div class="flex gap-4">
+        <button class="tab-link" data-tab="home">Home</button>
+        <button class="tab-link" data-tab="dashboard">Dashboard</button>
+        <button class="tab-link" data-tab="sessions">Sessions</button>
+        <button class="tab-link" data-tab="profile">Profile</button>
+      </div>
+      <div>
+        <span id="user-role" class="mr-4 font-semibold"></span>
+        <button onclick="logout()" class="text-red-500">Logout</button>
+      </div>
+    </nav>
+
+    <div id="home" class="tab-content p-6 hidden"></div>
+    <div id="dashboard" class="tab-content p-6 hidden"></div>
+    <div id="sessions" class="tab-content p-6 hidden"></div>
+    <div id="profile" class="tab-content p-6 hidden">
+      <input type="password" id="new-password" placeholder="New Password" class="border p-2 mb-3 block w-64" />
+      <button onclick="changePassword()" class="bg-blue-600 text-white px-4 py-2 rounded">Change Password</button>
+    </div>
+  </div>
+
+  <script>
+
+    let user = null;
+    let charts = {};
+
+    // Gotta store the data
+    function getUserData() {
+      const key = 'aphasiaData_' + user.username;
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : { entries: [], sessions: [] };
+    }
+    function saveUserData(data) {
+      const key = 'aphasiaData_' + user.username;
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    // Login page
+    function login() {
+      const username = document.getElementById('auth-username').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const role = document.getElementById('auth-role').value;
+
+      if (!username || !password || !role) {
+        alert('Please fill all fields');
+        return;
+      }
+
+      const storedUserRaw = localStorage.getItem('aphasiaUser_' + username);
+      if (storedUserRaw) {
+        const storedUser = JSON.parse(storedUserRaw);
+        if (storedUser.password !== password) {
+          alert('Incorrect password');
+          return;
+        }
+      }
+
+      user = { username, role, password };
+      localStorage.setItem('aphasiaUser_' + username, JSON.stringify(user));
+      localStorage.setItem('aphasiaUser', JSON.stringify(user));
+
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('main-app').classList.remove('hidden');
+      document.getElementById('user-role').innerText = `${role} (${username})`;
+      showTab('home');
+      renderContentForRole();
+    }
+
+    function logout() {
+      localStorage.removeItem('aphasiaUser');
+      location.reload();
+    }
+
+    function changePassword() {
+      const newPassword = document.getElementById('new-password').value;
+      if (!newPassword) {
+        alert('Enter a new password');
+        return;
+      }
+      user.password = newPassword;
+      localStorage.setItem('aphasiaUser_' + user.username, JSON.stringify(user));
+      localStorage.setItem('aphasiaUser', JSON.stringify(user));
+      alert('Password changed!');
+      document.getElementById('new-password').value = '';
+    }
+
+    // Switching between Tabs
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(div => div.classList.add('hidden'));
+      document.getElementById(tab).classList.remove('hidden');
+      document.querySelectorAll('.tab-link').forEach(btn => btn.classList.remove('tab-active'));
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('tab-active');
+    }
+
+    // Roles
+    function renderContentForRole() {
+      clearCharts();
+      if (!user) return;
+      const { role } = user;
+
+      if (role === 'Patient') {
+        renderPatientHome();
+        renderPatientDashboard();
+        renderPatientSessions();
+      } else if (role === 'Nurse') {
+        renderNurseHome();
+        renderNurseDashboard();
+        renderNurseSessions();
+      } else if (role === 'Doctor') {
+        renderDoctorHome();
+        renderDoctorDashboard();
+        renderDoctorSessions();
+      }
+    }
+
+    // What the patient sees
+    function renderPatientHome() {
+      const home = document.getElementById('home');
+      home.innerHTML = `
+        <h2 class="text-xl font-semibold mb-2">Welcome, ${user.username}!</h2>
+        <p>This is your home page. Track your progress in the Dashboard and manage appointments in Sessions.</p>
+      `;
+    }
+
+    function renderPatientDashboard() {
+      const dashboard = document.getElementById('dashboard');
+      const data = getUserData();
+
+      dashboard.innerHTML = `
+        <h2 class="text-xl font-semibold mb-4">Daily Language Entry</h2>
+        <textarea id="daily-entry" rows="4" class="w-full p-2 border rounded mb-2" placeholder="Describe your day..."></textarea>
+        <button id="submit-entry-btn" class="bg-blue-600 text-white px-4 py-2 rounded mb-4">Submit Entry</button>
+
+        <div id="metrics" class="grid grid-cols-3 gap-4 mb-4" style="display: none;">
+          <div>
+            <h3 class="text-sm text-gray-700">Vocabulary Richness</h3>
+            <div id="metric-vocab" class="text-lg font-bold text-teal-600">--</div>
+          </div>
+          <div>
+            <h3 class="text-sm text-gray-700">Avg Sentence Length</h3>
+            <div id="metric-sentence" class="text-lg font-bold text-green-600">--</div>
+          </div>
+          <div>
+            <h3 class="text-sm text-gray-700">Grammar Score</h3>
+            <div id="metric-grammar" class="text-lg font-bold text-purple-600">--</div>
+          </div>
+        </div>
+
+        <div id="charts-container" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" style="display: none;">
+          <canvas id="chart-vocab" height="200"></canvas>
+          <canvas id="chart-sentence" height="200"></canvas>
+          <canvas id="chart-grammar" height="200"></canvas>
+        </div>
+
+        <div id="alerts" class="text-red-600 font-semibold mb-4"></div>
+        <div id="gpt-summary" class="p-3 bg-green-100 text-green-900 rounded hidden"></div>
+      `;
+
+      document.getElementById('submit-entry-btn').addEventListener('click', async () => {
+        const textArea = document.getElementById('daily-entry');
+        const text = textArea.value.trim();
+        if (text.length < 5) {
+          alert('Please enter a longer response.');
+          return;
+        }
+        await addEntry(text);
+        textArea.value = '';
+      });
+
+      updatePatientDashboard();
+    }
+
+    // Charts
+    async function addEntry(text) {
+      const data = getUserData();
+
+      // Calc functions
+      const vocab = calcVocabRichness(text);
+      const avgSentLen = calcAvgSentenceLength(text);
+      const grammar = calcGrammarScore(text);
+
+      const entry = {
+        date: new Date().toISOString().split('T')[0],
+        text,
+        vocab,
+        avgSentLen,
+        grammar
+      };
+      data.entries.push(entry);
+      saveUserData(data);
+
+    
+      updatePatientDashboard();
+
+      // YOU NEED TO ADD GPT SUMMARY HERE DON'T FORGET!!!!!!!!
+      if (data.entries.length % 5 === 0) {
+        const gptSumDiv = document.getElementById('gpt-summary');
+        gptSumDiv.textContent = 'Progress summary generated by GPT (placeholder). Keep up the good work!';
+        gptSumDiv.classList.remove('hidden');
+      }
+    }
+
+    function updatePatientDashboard() {
+      const data = getUserData();
+      if (data.entries.length === 0) {
+        document.getElementById('metrics').style.display = 'none';
+        document.getElementById('charts-container').style.display = 'none';
+        document.getElementById('alerts').textContent = '';
+        document.getElementById('gpt-summary').classList.add('hidden');
+        return;
+      }
+      document.getElementById('metrics').style.display = 'grid';
+      document.getElementById('charts-container').style.display = 'grid';
+
+      const latest = data.entries[data.entries.length - 1];
+      document.getElementById('metric-vocab').innerText = (latest.vocab * 100).toFixed(1) + '%';
+      document.getElementById('metric-sentence').innerText = latest.avgSentLen.toFixed(1);
+      document.getElementById('metric-grammar').innerText = (latest.grammar * 100).toFixed(1) + '%';
+
+      // Detect plateau or decline (very basic: last 3 vocab non-increasing)
+      const entries = data.entries;
+      let plateau = false;
+      if (entries.length >= 4) {
+        plateau = true;
+        for (let i = entries.length - 3; i < entries.length; i++) {
+          if (entries[i].vocab > entries[i-1].vocab) {
+            plateau = false;
+            break;
+          }
+        }
+      }
+      const alertDiv = document.getElementById('alerts');
+      alertDiv.textContent = plateau ? '⚠️ Vocabulary plateau or decline detected.' : '✅ Progress looks stable';
+      alertDiv.style.color = plateau ? '#dc2626' : '#16a34a';
+
+      const dates = entries.map(e => e.date);
+      const vocabData = entries.map(e => +(e.vocab*100).toFixed(2));
+      const sentData = entries.map(e => +e.avgSentLen.toFixed(2));
+      const grammarData = entries.map(e => +(e.grammar*100).toFixed(2));
+
+
+      if (!charts.vocab) {
+        charts.vocab = new Chart(document.getElementById('chart-vocab').getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: dates,
+            datasets: [{
+              label: 'Vocabulary Richness (%)',
+              data: vocabData,
+              borderColor: '#14b8a6',
+              backgroundColor: 'rgba(20,184,166,0.3)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      } else {
+        charts.vocab.data.labels = dates;
+        charts.vocab.data.datasets[0].data = vocabData;
+        charts.vocab.update();
+      }
+
+      // Chart: Avg Sentence Length
+      if (!charts.sentence) {
+        charts.sentence = new Chart(document.getElementById('chart-sentence').getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: dates,
+            datasets: [{
+              label: 'Avg Sentence Length',
+              data: sentData,
+              borderColor: '#22c55e',
+              backgroundColor: 'rgba(34,197,94,0.3)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      } else {
+        charts.sentence.data.labels = dates;
+        charts.sentence.data.datasets[0].data = sentData;
+        charts.sentence.update();
+      }
+
+      // Chart: Grammar Score
+      if (!charts.grammar) {
+        charts.grammar = new Chart(document.getElementById('chart-grammar').getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: dates,
+            datasets: [{
+              label: 'Grammar Score (%)',
+              data: grammarData,
+              borderColor: '#8b5cf6',
+              backgroundColor: 'rgba(139,92,246,0.3)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      } else {
+        charts.grammar.data.labels = dates;
+        charts.grammar.data.datasets[0].data = grammarData;
+        charts.grammar.update();
+      }
+    }
+
+    // Update these calculations later: these are the ones i didn't write yet
+    function calcVocabRichness(text) {
+      const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+      const uniqueWords = new Set(words);
+      if (words.length === 0) return 0;
+      return uniqueWords.size / words.length;
+    }
+
+    function calcAvgSentenceLength(text) {
+      const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
+      if (sentences.length === 0) return 0;
+      const totalWords = sentences.reduce((acc, s) => acc + (s.match(/\b\w+\b/g) || []).length, 0);
+      return totalWords / sentences.length;
+    }
+
+    function calcGrammarScore(text) {
+      // check the doc for the real equation
+      const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
+      if (sentences.length === 0) return 0;
+      let good = 0;
+      for (const s of sentences) {
+        if (/^[A-Z]/.test(s) && /[.!?]$/.test(s + '.')) good++;
+      }
+      return good / sentences.length;
+    }
+
+    function renderPatientSessions() {
+      const sessionsDiv = document.getElementById('sessions');
+      const data = getUserData();
+
+      const placeholders = [
+        { id: 'sess1', date: '2025-07-10', time: '10:00 AM', doctor: 'Dr. Lee', status: 'Pending' },
+        { id: 'sess2', date: '2025-07-15', time: '2:00 PM', doctor: 'Dr. Anand', status: 'Confirmed' },
+      ];
+
+      sessionsDiv.innerHTML = `
+        <h2 class="text-xl font-semibold mb-4">Your Sessions</h2>
+        <table class="w-full text-left border-collapse mb-4">
+          <thead>
+            <tr class="border-b border-gray-300">
+              <th class="py-2 px-3">Date</th>
+              <th class="py-2 px-3">Time</th>
+              <th class="py-2 px-3">Doctor</th>
+              <th class="py-2 px-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${placeholders.map(s => `
+              <tr>
+                <td class="py-2 px-3">${s.date}</td>
+                <td class="py-2 px-3">${s.time}</td>
+                <td class="py-2 px-3">${s.doctor}</td>
+                <td class="py-2 px-3">${s.status}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <h3 class="text-lg font-semibold mb-2">Request or Schedule Appointment</h3>
+        <form id="session-form" class="space-y-3 max-w-md">
+          <label>
+            Date:
+            <input type="date" id="session-date" class="border p-
+
+              <label>
+            Date:
+            <input type="date" id="session-date" class="border p-2 rounded w-full" required />
+          </label>
+          <label>
+            Time:
+            <input type="time" id="session-time" class="border p-2 rounded w-full" required />
+          </label>
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Request Session</button>
+        </form>
+        <div id="session-msg" class="mt-2 text-green-600 font-semibold"></div>
+      `;
+
+      // Handle session request submission
+      const form = document.getElementById('session-form');
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const date = document.getElementById('session-date').value;
+        const time = document.getElementById('session-time').value;
+        if (!date || !time) return alert('Please select date and time');
+        
+        // Add new session request
+        const newSession = {
+          id: 'sess_' + Date.now(),
+          date,
+          time,
+          doctor: 'Unassigned',
+          status: 'Pending',
+          patient: user.username
+        };
+
+        const data = getUserData();
+        data.sessions.push(newSession);
+        saveUserData(data);
+
+        document.getElementById('session-msg').innerText = `Session requested for ${date} at ${time}`;
+        // Re-render sessions to show updated table
+        renderPatientSessions();
+      });
+    }
+
+    // --- Doctor Screens ---
+    function renderDoctorHome() {
+      const home = document.getElementById('home');
+      home.innerHTML = `
+        <h2 class="text-xl font-semibold mb-2">Welcome, Dr. ${user.username}!</h2>
+        <p>This is your home page. Manage patient sessions in the Sessions tab.</p>
+      `;
+    }
+
+    function renderDoctorDashboard() {
+      const dashboard = document.getElementById('dashboard');
+      dashboard.innerHTML = `
+        <h2 class="text-xl font-semibold mb-4">Doctor Dashboard</h2>
+        <p>Feature coming soon. Schedule sessions in the meantime. </p>
+      `;
+    }
+
+    function renderDoctorSessions() {
+      const sessionsDiv = document.getElementById('sessions');
+        sessionsDiv.innerHTML = `
+            <h2 class="text-xl font-semibold mb-4">Doctor Sessions</h2>
+            <p>Manage patient sessions here. Click on "Approve" to confirm sessions.</p>
+        `;
+      const sessions = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('aphasiaData_')) {
+          const pdata = JSON.parse(localStorage.getItem(key));
+          if (pdata.sessions && pdata.sessions.length) {
+            pdata.sessions.forEach(sess => {
+              sessions.push({...sess, patient: key.replace('aphasiaData_', '')});
+            });
+          }
+        }
+      }
+
+      if (sessions.length === 0) {
+        sessionsDiv.innerHTML = `<h2 class="text-xl font-semibold mb-2">Manage patient sessions here. Click on "Approve" to confirm sessions.
+            No patients have requested sessions yet.</h2>`;
+        return;
+      }
+
+      sessionsDiv.innerHTML = `
+        <h2 class="text-xl font-semibold mb-4">Patient Sessions</h2>
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-gray-300">
+              <th class="py-2 px-3">Patient</th>
+              <th class="py-2 px-3">Date</th>
+              <th class="py-2 px-3">Time</th>
+              <th class="py-2 px-3">Doctor</th>
+              <th class="py-2 px-3">Status</th>
+              <th class="py-2 px-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sessions.map(sess => `
+              <tr data-session-id="${sess.id}" data-patient="${sess.patient}">
+                <td class="py-2 px-3">${sess.patient}</td>
+                <td class="py-2 px-3">${sess.date}</td>
+                <td class="py-2 px-3">${sess.time}</td>
+                <td class="py-2 px-3">${sess.doctor}</td>
+                <td class="py-2 px-3 status-cell">${sess.status}</td>
+                <td class="py-2 px-3">
+                  ${sess.status === 'Pending' ? `<button class="approve-btn bg-green-600 text-white px-3 py-1 rounded">Approve</button>` : ''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div id="approve-confirmation" class="mt-4 p-3 bg-green-100 text-green-900 rounded hidden"></div>
+      `;
+
+      // Add event listeners for approve buttons
+      sessionsDiv.querySelectorAll('.approve-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const tr = e.target.closest('tr');
+          const sessionId = tr.getAttribute('data-session-id');
+          const patientName = tr.getAttribute('data-patient');
+
+          // Update session status in patient's data
+          const patientDataKey = 'aphasiaData_' + patientName;
+          const patientData = JSON.parse(localStorage.getItem(patientDataKey));
+          if (!patientData) return alert('Patient data not found');
+
+          const session = patientData.sessions.find(s => s.id === sessionId);
+          if (!session) return alert('Session not found');
+
+          session.status = 'Approved';
+          session.doctor = user.username;
+
+          localStorage.setItem(patientDataKey, JSON.stringify(patientData));
+
+          // Update UI
+          tr.querySelector('.status-cell').innerText = 'Approved';
+          e.target.remove();
+
+          // Show confirmation popup in sessions div
+          const confDiv = document.getElementById('approve-confirmation');
+          confDiv.innerText = `Session for patient "${patientName}" on ${session.date} at ${session.time} approved!`;
+          confDiv.classList.remove('hidden');
+
+          // Optionally hide confirmation after 3 seconds
+          setTimeout(() => confDiv.classList.add('hidden'), 3000);
+        });
+      });
+    }
+
+    // --- Nurse Screens (just a place to access everything for the nurses) ---
+    function renderNurseHome() {
+      const home = document.getElementById('home');
+      home.innerHTML = `
+        <h2 class="text-xl font-semibold mb-2">Welcome, Nurse ${user.username}</h2>
+        <p>Manage your assigned patients and sessions here. Confirm other details in-person.</p>
+      `;
+    }
+
+    function renderNurseDashboard() {
+      const dashboard = document.getElementById('dashboard');
+      dashboard.innerHTML = `<h2 class="text-xl font-semibold mb-4">Nurse Dashboard</h2><p>No patients for you to see yet.</p>`;
+    }
+
+    function renderNurseSessions() {
+      const sessions = document.getElementById('sessions');
+      sessions.innerHTML = `<h2 class="text-xl font-semibold mb-4">Nurse Sessions</h2><p>No sessions booked now. </p>`;
+    }
+
+    // --- Clear charts on tab switch or re-render ---
+    function clearCharts() {
+      for (const key in charts) {
+        if (charts[key]) {
+          charts[key].destroy();
+          charts[key] = null;
+        }
+      }
+    }
+
+    // --- Initialization ---
+    document.querySelectorAll('.tab-link').forEach(btn => {
+      btn.addEventListener('click', () => {
+        showTab(btn.getAttribute('data-tab'));
+      });
+    });
+
+    // Check if user is already logged in
+    window.onload = () => {
+      const savedUserRaw = localStorage.getItem('aphasiaUser');
+      if (savedUserRaw) {
+        user = JSON.parse(savedUserRaw);
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('main-app').classList.remove('hidden');
+        document.getElementById('user-role').innerText = `${user.role} (${user.username})`;
+        showTab('home');
+        renderContentForRole();
+      }
+    }
+  </script>
 </body>
 </html>
+
