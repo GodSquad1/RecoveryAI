@@ -16,7 +16,7 @@
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-  <!-- Login Screen -->
+  <!-- Logging In-->
   <div id="auth-screen" class="flex items-center justify-center min-h-screen">
     <div class="bg-white p-6 rounded shadow-md w-96">
       <h2 class="text-2xl font-bold mb-4 text-center">Login / Signup</h2>
@@ -31,7 +31,6 @@
     </div>
   </div>
 
-  <!-- Main App -->
   <div id="main-app" class="hidden">
     <nav class="bg-white shadow p-4 flex justify-between">
       <div class="flex gap-4">
@@ -71,7 +70,7 @@
       localStorage.setItem(key, JSON.stringify(data));
     }
 
-    // Login page
+    // Login page JS
     function login() {
       const username = document.getElementById('auth-username').value.trim();
       const password = document.getElementById('auth-password').value;
@@ -86,7 +85,7 @@
       if (storedUserRaw) {
         const storedUser = JSON.parse(storedUserRaw);
         if (storedUser.password !== password) {
-          alert('Incorrect password');
+          alert('Wrong password!');
           return;
         }
       }
@@ -182,10 +181,16 @@
           </div>
         </div>
 
-        <div id="charts-container" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" style="display: none;">
-          <canvas id="chart-vocab" height="200"></canvas>
-          <canvas id="chart-sentence" height="200"></canvas>
-          <canvas id="chart-grammar" height="200"></canvas>
+        <div id="charts-container" class="flex flex-col gap-4 mb-4" style="display: none;">
+            <div class="w-full h-[300px]">
+                <canvas id="chart-vocab"></canvas>
+            </div>
+            <div class="w-full h-[300px]">
+                <canvas id="chart-sentence"></canvas>
+            </div>
+            <div class="w-full h-[300px]">
+                <canvas id="chart-grammar"></canvas>
+            </div>
         </div>
 
         <div id="alerts" class="text-red-600 font-semibold mb-4"></div>
@@ -253,7 +258,6 @@
       document.getElementById('metric-sentence').innerText = latest.avgSentLen.toFixed(1);
       document.getElementById('metric-grammar').innerText = (latest.grammar * 100).toFixed(1) + '%';
 
-      // Detect plateau or decline (very basic: last 3 vocab non-increasing)
       const entries = data.entries;
       let plateau = false;
       if (entries.length >= 4) {
@@ -299,7 +303,7 @@
         charts.vocab.update();
       }
 
-      // Chart: Avg Sentence Length
+
       if (!charts.sentence) {
         charts.sentence = new Chart(document.getElementById('chart-sentence').getContext('2d'), {
           type: 'line',
@@ -324,7 +328,7 @@
         charts.sentence.update();
       }
 
-      // Chart: Grammar Score
+
       if (!charts.grammar) {
         charts.grammar = new Chart(document.getElementById('chart-grammar').getContext('2d'), {
           type: 'line',
@@ -351,12 +355,20 @@
     }
 
     // Update these calculations later: these are the ones i didn't write yet
-    function calcVocabRichness(text) {
-      const words = text.toLowerCase().match(/\b\w+\b/g) || [];
-      const uniqueWords = new Set(words);
-      if (words.length === 0) return 0;
-      return uniqueWords.size / words.length;
-    }
+    function calcVocabRichness(text, G_max = 20000) {
+        const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+        const W = words.length;
+        if (W === 0) return 0;
+
+        const U = new Set(words).size;
+
+        const numerator = Math.pow(Math.log10(U / W + 1), 2);
+        const denominator = Math.pow(Math.log10(G_max + 1), 2);
+        const richness = Math.min(Math.max(numerator / denominator, 0), 1);
+
+        return richness;
+}
+
 
     function calcAvgSentenceLength(text) {
       const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
@@ -427,7 +439,7 @@
         <div id="session-msg" class="mt-2 text-green-600 font-semibold"></div>
       `;
 
-      // Handle session request submission
+
       const form = document.getElementById('session-form');
       form.addEventListener('submit', e => {
         e.preventDefault();
@@ -435,7 +447,7 @@
         const time = document.getElementById('session-time').value;
         if (!date || !time) return alert('Please select date and time');
         
-        // Add new session request
+
         const newSession = {
           id: 'sess_' + Date.now(),
           date,
@@ -553,12 +565,12 @@
           tr.querySelector('.status-cell').innerText = 'Approved';
           e.target.remove();
 
-          // Show confirmation popup in sessions div
+
           const confDiv = document.getElementById('approve-confirmation');
           confDiv.innerText = `Session for patient "${patientName}" on ${session.date} at ${session.time} approved!`;
           confDiv.classList.remove('hidden');
 
-          // Optionally hide confirmation after 3 seconds
+
           setTimeout(() => confDiv.classList.add('hidden'), 3000);
         });
       });
@@ -583,7 +595,7 @@
       sessions.innerHTML = `<h2 class="text-xl font-semibold mb-4">Nurse Sessions</h2><p>No sessions booked now. </p>`;
     }
 
-    // --- Clear charts on tab switch or re-render ---
+
     function clearCharts() {
       for (const key in charts) {
         if (charts[key]) {
@@ -593,14 +605,14 @@
       }
     }
 
-    // --- Initialization ---
+
     document.querySelectorAll('.tab-link').forEach(btn => {
       btn.addEventListener('click', () => {
         showTab(btn.getAttribute('data-tab'));
       });
     });
 
-    // Check if user is already logged in
+
     window.onload = () => {
       const savedUserRaw = localStorage.getItem('aphasiaUser');
       if (savedUserRaw) {
@@ -615,4 +627,4 @@
   </script>
 </body>
 </html>
-
+    
