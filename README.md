@@ -29,12 +29,14 @@ People recovering from strokes or other injuries often have trouble with languag
 - Word2vec
 - Chart.js
 - OpenAI API
+
+
 **Features**
   
-✅ Sentence analysis (vocab, grammar, overall quality)
-✅ Progress tracking with graphs
-✅ Cosine similarity to reference vectors
-✅ Ability to book sessions with a Doctor/manage sessions
+- Sentence analysis (vocab, grammar, overall quality)
+- Progress tracking with graphs
+- Cosine similarity to reference vectors
+- Ability to book sessions with a Doctor/manage sessions
 
 **Future ideas**
 
