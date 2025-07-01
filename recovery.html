@@ -12,36 +12,56 @@
       border-bottom: 2px solid #3b82f6;
       font-weight: 600;
     }
+    .glass {
+      background: #23272a;
+      border-radius: 0.375rem;
+      border: 1.5px solid #2d3236;
+      box-shadow: 0 2px 16px 0 rgba(0,0,0,0.18), 0 1.5px 6px 0 rgba(0,0,0,0.10);
+    }
+    .focus-glow:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px #6b7280cc;
+    }
+    .btn {
+      transition: transform 0.12s cubic-bezier(.4,0,.2,1), box-shadow 0.12s;
+    }
+    .btn:hover, .btn:focus {
+      transform: scale(1.045);
+      box-shadow: 0 0 0 4px #6b728055;
+    }
+    .btn:active {
+      transform: scale(0.98);
+    }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-[#181a1b] text-gray-200 min-h-screen">
 
   <!-- Logging In-->
-  <div id="auth-screen" class="flex items-center justify-center min-h-screen">
-    <div class="bg-white p-6 rounded shadow-md w-96">
-      <h2 class="text-2xl font-bold mb-4 text-center">Login / Signup</h2>
-      <input type="text" id="auth-username" placeholder="Username" class="w-full mb-3 px-4 py-2 border rounded" />
-      <input type="password" id="auth-password" placeholder="Password" class="w-full mb-3 px-4 py-2 border rounded" />
-      <select id="auth-role" class="w-full mb-3 px-4 py-2 border rounded">
+  <div id="auth-screen" class="flex items-center justify-center min-h-screen bg-[#181a1b]">
+    <div class="bg-[#23272a] p-6 rounded shadow-md w-96 border border-[#2d3236]">
+      <h2 class="text-2xl font-bold mb-4 text-center text-blue-400">Login / Signup</h2>
+      <input type="text" id="auth-username" placeholder="Username" class="w-full mb-3 px-4 py-2 border border-[#2d3236] rounded bg-[#2d3236] text-gray-100 placeholder-gray-400" />
+      <input type="password" id="auth-password" placeholder="Password" class="w-full mb-3 px-4 py-2 border border-[#2d3236] rounded bg-[#2d3236] text-gray-100 placeholder-gray-400" />
+      <select id="auth-role" class="w-full mb-3 px-4 py-2 border border-[#2d3236] rounded bg-[#2d3236] text-gray-100">
         <option value="Patient">Patient</option>
         <option value="Nurse">Nurse</option>
         <option value="Doctor">Doctor</option>
       </select>
-      <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded">Enter</button>
+      <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded btn">Enter</button>
     </div>
   </div>
 
   <div id="main-app" class="hidden">
-    <nav class="bg-white shadow p-4 flex justify-between">
+    <nav class="bg-[#23272a] shadow p-4 flex justify-between border-b border-[#2d3236]">
       <div class="flex gap-4">
-        <button class="tab-link" data-tab="home">Home</button>
-        <button class="tab-link" data-tab="dashboard">Dashboard</button>
-        <button class="tab-link" data-tab="sessions">Sessions</button>
-        <button class="tab-link" data-tab="profile">Profile</button>
+        <button class="tab-link text-gray-200" data-tab="home">Home</button>
+        <button class="tab-link text-gray-200" data-tab="dashboard">Dashboard</button>
+        <button class="tab-link text-gray-200" data-tab="sessions">Sessions</button>
+        <button class="tab-link text-gray-200" data-tab="profile">Profile</button>
       </div>
       <div>
-        <span id="user-role" class="mr-4 font-semibold"></span>
-        <button onclick="logout()" class="text-red-500">Logout</button>
+        <span id="user-role" class="mr-4 font-semibold text-blue-400"></span>
+        <button onclick="logout()" class="text-red-400">Logout</button>
       </div>
     </nav>
 
@@ -49,8 +69,8 @@
     <div id="dashboard" class="tab-content p-6 hidden"></div>
     <div id="sessions" class="tab-content p-6 hidden"></div>
     <div id="profile" class="tab-content p-6 hidden">
-      <input type="password" id="new-password" placeholder="New Password" class="border p-2 mb-3 block w-64" />
-      <button onclick="changePassword()" class="bg-blue-600 text-white px-4 py-2 rounded">Change Password</button>
+      <input type="password" id="new-password" placeholder="New Password" class="border border-[#2d3236] bg-[#23272a] text-gray-100 p-2 mb-3 block w-64 rounded" />
+      <button onclick="changePassword()" class="bg-blue-600 text-white px-4 py-2 rounded btn">Change Password</button>
     </div>
   </div>
 
@@ -162,39 +182,79 @@
       const data = getUserData();
 
       dashboard.innerHTML = `
-        <h2 class="text-xl font-semibold mb-4">Daily Language Entry</h2>
-        <textarea id="daily-entry" rows="4" class="w-full p-2 border rounded mb-2" placeholder="Describe your day..."></textarea>
-        <button id="submit-entry-btn" class="bg-blue-600 text-white px-4 py-2 rounded mb-4">Submit Entry</button>
-
-        <div id="metrics" class="grid grid-cols-3 gap-4 mb-4" style="display: none;">
-          <div>
-            <h3 class="text-sm text-gray-700">Vocabulary Richness</h3>
-            <div id="metric-vocab" class="text-lg font-bold text-teal-600">--</div>
+        <div class="flex flex-col items-center justify-center w-full min-h-[60vh]">
+          <div class="w-full max-w-4xl mx-auto mb-8">
+            <div class="glass p-6 rounded-md shadow flex flex-col items-center">
+              <h1 class="text-3xl md:text-4xl font-bold text-center text-blue-400 mb-2">RecoveryAI</h1>
+              <p class="text-lg text-center text-green-300">Monitor and visualize patient speech recovery progress with clarity and confidence.</p>
+            </div>
           </div>
-          <div>
-            <h3 class="text-sm text-gray-700">Avg Sentence Length</h3>
-            <div id="metric-sentence" class="text-lg font-bold text-green-600">--</div>
-          </div>
-          <div>
-            <h3 class="text-sm text-gray-700">Grammar Score</h3>
-            <div id="metric-grammar" class="text-lg font-bold text-purple-600">--</div>
+          <div class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-8 justify-center">
+            <div class="lg:col-span-2 flex flex-col gap-8">
+              <!-- Input Card -->
+              <div class="glass p-8 rounded-md shadow-2xl flex flex-col space-y-4">
+                <textarea id="daily-entry" rows="4" class="w-full p-4 rounded-lg bg-[#2d3236] border border-[#2d3236] shadow focus:ring-2 focus:ring-gray-700 focus:bg-[#2d3236] transition placeholder-gray-400 text-gray-100 focus-glow" placeholder="Describe your day..."></textarea>
+                <button id="submit-entry-btn" class="bg-blue-600 text-white px-4 py-2 rounded btn mb-2">Submit Entry</button>
+                <div id="alerts" class="text-red-400 font-semibold mt-2"></div>
+              </div>
+              <!-- Metrics Card -->
+              <div class="glass p-6 rounded-md shadow-2xl flex flex-col space-y-2" id="metrics" style="display: none;">
+                <div class="flex items-center gap-1">
+                  <h3 class="text-sm text-gray-400">Vocabulary Richness</h3>
+                </div>
+                <div id="metric-vocab" class="text-xl font-bold text-teal-400">--</div>
+                <div class="flex items-center gap-1 mt-2">
+                  <h3 class="text-sm text-gray-400">Avg Sentence Length</h3>
+                </div>
+                <div id="metric-sentence" class="text-xl font-bold text-green-400">--</div>
+                <div class="flex items-center gap-1 mt-2">
+                  <h3 class="text-sm text-gray-400">Grammar Score</h3>
+                </div>
+                <div id="metric-grammar" class="text-xl font-bold text-purple-400">--</div>
+              </div>
+              <!-- Charts Card -->
+              <div class="glass p-6 rounded-md shadow-2xl flex flex-col space-y-4" id="charts-container" style="display: none;">
+                <div class="w-full h-[200px]">
+                  <canvas id="chart-vocab"></canvas>
+                </div>
+                <div class="w-full h-[200px]">
+                  <canvas id="chart-sentence"></canvas>
+                </div>
+                <div class="w-full h-[200px]">
+                  <canvas id="chart-grammar"></canvas>
+                </div>
+              </div>
+              <!-- GPT Summary Card -->
+              <div class="glass p-6 rounded-md shadow-2xl flex flex-col mt-4" id="gpt-summary" style="display: none;">
+                <div class="text-green-300 font-semibold">Progress summary generated by GPT (placeholder). Keep up the good work!</div>
+              </div>
+            </div>
+            <!-- Support Panel (Right Side) -->
+            <aside class="hidden lg:flex flex-col space-y-6 min-w-[260px] max-w-xs h-fit sticky top-8 glass sidebar-glass p-6">
+              <div>
+                <h2 class="text-lg font-semibold text-blue-400 mb-2">Support & Resources</h2>
+                <ul class="list-disc list-inside text-sm text-gray-300 space-y-1">
+                  <li><a href="https://www.aphasia.org/" target="_blank" class="text-blue-300 underline">National Aphasia Association</a></li>
+                  <li><a href="https://www.stroke.org/" target="_blank" class="text-blue-300 underline">Stroke Support</a></li>
+                  <li><a href="https://www.aphasia.com/" target="_blank" class="text-blue-300 underline">Aphasia.com</a></li>
+                </ul>
+              </div>
+              <div>
+                <h2 class="text-lg font-semibold text-blue-400 mb-2">Tips for Better Responses</h2>
+                <ul class="list-disc list-inside text-sm text-gray-300 space-y-1">
+                  <li>Be as descriptive as possible in your daily entry.</li>
+                  <li>Use full sentences and try to vary your vocabulary.</li>
+                  <li>Mention any challenges or improvements you notice.</li>
+                </ul>
+              </div>
+              <div>
+                <h2 class="text-lg font-semibold text-blue-400 mb-2">Need Help?</h2>
+                <p class="text-sm text-gray-300">See <a href="#" class="text-blue-300 underline">how it works</a> or <a href="mailto:support@example.com" class="text-blue-300 underline">contact support</a>.</p>
+              </div>
+              <div class="mt-4 text-xs text-gray-500">For educational purposes only. Not a substitute for professional medical advice.</div>
+            </aside>
           </div>
         </div>
-
-        <div id="charts-container" class="flex flex-col gap-4 mb-4" style="display: none;">
-            <div class="w-full h-[300px]">
-                <canvas id="chart-vocab"></canvas>
-            </div>
-            <div class="w-full h-[300px]">
-                <canvas id="chart-sentence"></canvas>
-            </div>
-            <div class="w-full h-[300px]">
-                <canvas id="chart-grammar"></canvas>
-            </div>
-        </div>
-
-        <div id="alerts" class="text-red-600 font-semibold mb-4"></div>
-        <div id="gpt-summary" class="p-3 bg-green-100 text-green-900 rounded hidden"></div>
       `;
 
       document.getElementById('submit-entry-btn').addEventListener('click', async () => {
@@ -355,7 +415,7 @@
     }
 
     // Update these calculations later: these are the ones i didn't write yet
-    function calcVocabRichness(text, G_max = 20000) {
+    function calcVocabRichness(text, G_max = 0.3) {
         const words = text.toLowerCase().match(/\b\w+\b/g) || [];
         const W = words.length;
         if (W === 0) return 0;
@@ -424,15 +484,11 @@
         <form id="session-form" class="space-y-3 max-w-md">
           <label>
             Date:
-            <input type="date" id="session-date" class="border p-
-
-              <label>
-            Date:
-            <input type="date" id="session-date" class="border p-2 rounded w-full" required />
+            <input type="date" id="session-date" class="border p-2 rounded w-full text-black" required />
           </label>
           <label>
             Time:
-            <input type="time" id="session-time" class="border p-2 rounded w-full" required />
+            <input type="time" id="session-time" class="border p-2 rounded w-full text-black" required />
           </label>
           <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Request Session</button>
         </form>
@@ -479,8 +535,16 @@
     function renderDoctorDashboard() {
       const dashboard = document.getElementById('dashboard');
       dashboard.innerHTML = `
-        <h2 class="text-xl font-semibold mb-4">Doctor Dashboard</h2>
-        <p>Feature coming soon. Schedule sessions in the meantime. </p>
+        <div class="flex flex-col items-center justify-center w-full min-h-[60vh]">
+          <div class="w-full max-w-4xl mx-auto mb-8">
+            <div class="glass p-6 rounded-md shadow flex flex-col items-center">
+              <h1 class="text-3xl md:text-4xl font-bold text-center text-blue-400 mb-2">RecoveryAI</h1>
+              <p class="text-lg text-center text-green-300">Monitor and visualize patient speech recovery progress with clarity and confidence.</p>
+            </div>
+          </div>
+          <h2 class="text-xl font-semibold mb-4">Doctor Dashboard</h2>
+          <p>Feature coming soon. Schedule sessions in the meantime. </p>
+        </div>
       `;
     }
 
@@ -587,7 +651,17 @@
 
     function renderNurseDashboard() {
       const dashboard = document.getElementById('dashboard');
-      dashboard.innerHTML = `<h2 class="text-xl font-semibold mb-4">Nurse Dashboard</h2><p>No patients for you to see yet.</p>`;
+      dashboard.innerHTML = `
+        <div class="flex flex-col items-center justify-center w-full min-h-[60vh]">
+          <div class="w-full max-w-4xl mx-auto mb-8">
+            <div class="glass p-6 rounded-md shadow flex flex-col items-center">
+              <h1 class="text-3xl md:text-4xl font-bold text-center text-blue-400 mb-2">RecoveryAI</h1>
+              <p class="text-lg text-center text-green-300">Monitor and visualize patient speech recovery progress with clarity and confidence.</p>
+            </div>
+          </div>
+          <h2 class="text-xl font-semibold mb-4">Nurse Dashboard</h2><p>No patients for you to see yet.</p>
+        </div>
+      `;
     }
 
     function renderNurseSessions() {
