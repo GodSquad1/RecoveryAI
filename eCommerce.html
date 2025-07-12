@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ecommerce Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="eCommerce.css" />
+</head>
+<body class="bg-[#181a1b] text-gray-200 min-h-screen">
+
+  <!-- Login Page -->
+  <div id="auth-screen" class="flex items-center justify-center min-h-screen bg-[#181a1b]">
+    <div class="bg-[#23272a] p-6 rounded shadow-md w-96 border border-[#2d3236]">
+      <h2 class="text-2xl font-bold mb-4 text-center text-blue-400">Login / Signup</h2>
+      <input type="text" id="auth-username" placeholder="Username" class="w-full mb-3 px-4 py-2 border border-[#2d3236] rounded bg-[#2d3236] text-gray-100 placeholder-gray-400" />
+      <input type="password" id="auth-password" placeholder="Password" class="w-full mb-3 px-4 py-2 border border-[#2d3236] rounded bg-[#2d3236] text-gray-100 placeholder-gray-400" />
+      <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded btn">Enter</button>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="main-app" class="hidden p-6 max-w-4xl mx-auto">
+    <div class="flex space-x-4 mb-6 border-b border-gray-600">
+      <button class="tab-link tab-active" data-tab="home" onclick="showTab('home'); renderHomePage();">Home</button>
+      <button class="tab-link" data-tab="dashboard" onclick="showTab('dashboard'); renderDashboard();">Dashboard</button>
+      <button class="tab-link" onclick="logout()">Logout</button>
+    </div>
+
+    <div id="home" class="tab-content"></div>
+
+    <div id="dashboard" class="tab-content hidden"></div>
+  </div>
+
+  <script src="eCommerce.js"></script>
+</body>
+</html>
