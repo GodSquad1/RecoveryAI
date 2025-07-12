@@ -22,13 +22,19 @@ People recovering from strokes or other injuries often have trouble with languag
 
 **Tech stack**
 
-- HTML
-- Tailwind CSS
-- Vanilla JS
-- Local Storage (via a JSON)
-- Word2vec
-- Chart.js
-- OpenAI API
+HTML5 – Semantic structure for content and layout
+
+Tailwind CSS – Utility-first CSS framework for custom styling and dark mode support
+
+Vanilla JavaScript (ES6+) – Core logic, interactivity, and state transitions without frameworks
+
+Chart.js – Visualization library for displaying user progress metrics over time
+
+LocalStorage (JSON-based) – Persistent client-side storage of user data and session entries
+
+Word2Vec (conceptual use) – Used for estimating vocabulary diversity and lexical richness heuristics
+
+
 
 
 **Features**
