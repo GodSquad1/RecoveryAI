@@ -66,7 +66,7 @@ function renderDashboard() {
     <h2 class="text-xl font-semibold mb-4">Dashboard</h2>
 
     <form id="product-form" class="mb-6 space-y-4 bg-[#2d3236] p-4 rounded">
-      <h3 class="text-lg font-bold mb-2">Add Product</h3>
+      <h3 class="text-lg font-bold mb-2 text-white">Add Product</h3>
       <input type="text" id="product-name" placeholder="Product Name" required class="w-full p-2 rounded bg-[#181a1b] border border-gray-600 text-gray-200" />
       <input type="text" id="product-category" placeholder="Category" required class="w-full p-2 rounded bg-[#181a1b] border border-gray-600 text-gray-200" />
       <input type="number" id="product-price" placeholder="Price" required min="0" step="0.01" class="w-full p-2 rounded bg-[#181a1b] border border-gray-600 text-gray-200" />
@@ -81,12 +81,12 @@ function renderDashboard() {
     <div id="product-list" class="space-y-2 mb-6"></div>
 
     <div id="assessment" class="mt-6 bg-[#23272a] p-4 rounded hidden">
-      <h3 class="text-lg font-bold mb-2">Assessment</h3>
+      <h3 class="text-lg font-bold mb-2 text-white">Assessment</h3>
       <pre id="assessment-text" class="whitespace-pre-wrap text-gray-200"></pre>
     </div>
 
     <div id="e-total" class="mt-4 p-4 bg-[#2d3236] rounded">
-      <h3 class="text-lg font-bold mb-1">Total Adjusted Value (E_total)</h3>
+      <h3 class="text-lg font-bold mb-1 text-white">Total Adjusted Value (E_total)</h3>
       <p id="e-total-value" class="text-2xl font-semibold text-green-400">$0.00</p>
     </div>
 
@@ -142,7 +142,7 @@ function renderProductList() {
   list.innerHTML = data.products.map((p, i) => `
     <div class="p-2 bg-[#181a1b] rounded flex justify-between items-center">
       <div>
-        <strong>${p.name}</strong> (${p.category}) - $${p.price.toFixed(2)} x ${p.quantity}<br/>
+        <strong class="text-white">${p.name}</strong> (${p.category}) - $${p.price.toFixed(2)} x ${p.quantity}<br/>
         <small class="text-gray-400">Discount: ${p.discount ?? 0}, Handling: ${p.handling ?? 0}, Seasonality: ${p.seasonality ?? 1}</small>
         <p class="text-sm text-gray-400">${p.description || ''}</p>
       </div>
@@ -195,12 +195,12 @@ async function generateAssessment() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ADD YOUR OPEN API KEY`
+        'Authorization': `Bearer YOUR API KEY HERE`
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini', 
         messages: [
-          { role: 'system', content: 'You are an ecommerce expert assistant with a PhD in business and digital marketing from Wharton (UPenn).' },
+          { role: 'system', content: 'You are an ecommerce expert assistant with a PhD in business and digital marketing from Wharton (Upenn).' },
           { role: 'user', content: prompt }
         ],
         max_tokens: 100,
